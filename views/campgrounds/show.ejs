@@ -1,0 +1,101 @@
+<% include ../partials/header %>
+
+        <div class="row">
+                <div class="col-md-3">
+                        <p class="lead">YelpCamp</p>
+                        <div class="list-group">
+                                <li class="list-group-item active">Info 1</li>
+                                <li class="list-group-item">Info 2</li>
+                                <li class="list-group-item">Info 3</li>
+                        </div>
+                         <div id="map"></div>
+                </div>
+                <div class="col-md-9">
+                        <div class="thumbnail">
+                             <img class="image-responsive" src="<%=campground.image%>"> 
+                             <div class="caption-full">
+                                     <h4 class="pull-right">$<%= campground.price %>/night</h4>
+                                     <h4><a><%=campground.name%></a></h4>
+                                     <p><%=campground.description%></p>
+                                    <p>
+                                         <em>Submitted by: <a href="/users/<%= campground.author.id %>"><%= campground.author.username %></a>, <%= moment(campground.createdAt).fromNow() %></em>
+                                    </p>
+                                     <% if(currentUser && campground.author.id.equals(currentUser._id) || currentUser && currentUser.isAdmin){ %>
+                                             <a class="btn btn-warning" href="/campgrounds/<%= campground._id %>/edit">Edit</a>
+                                             <form id="delete-form" action="/campgrounds/<%= campground._id %>?_method=DELETE" method="POST">
+                                                     <button class="btn btn-danger">Delete</button>
+                                             </form>
+                                     <% } %>
+                             </div>
+                        </div>
+                        <div class="well">
+                                <div class="text-right">
+                                     <a class="btn btn-success" href="/campgrounds/<%= campground._id %>/comments/new">Add New Comment</a>
+                                </div>
+                                <hr>
+                                <% campground.comments.forEach(function(comment){ %>
+                                <div class="row">
+                                        <div class="col-md-12">
+                                                <strong><%= comment.author.username %></strong>
+                                                <span class="pull-right"><%= moment(comment.createdAt).fromNow() %></span>
+                                        <p>
+                                             <%= comment.text %>
+                                        </p>
+                                        <% if(currentUser && comment.author.id.equals(currentUser._id) || currentUser && currentUser.isAdmin){ %>
+                                        <a class="btn btn-xs btn-warning" 
+                                           href="/campgrounds/<%=campground._id%>/comments/<%=comment._id%>/edit">
+                                                Edit
+                                        </a>
+                                        <form class="delete-form " action="/campgrounds/<%=campground._id%>/comments/<%=comment._id%>?_method=DELETE" method="POST">
+                                                <input type="submit" class="btn btn-xs btn-danger" value="Delete">
+                                        </form>
+                                        <% } %>
+                                        </div>
+                                </div>
+                                        
+                                <% }); %>
+                        </div>
+                </div>
+        </div>
+
+                   <script>
+
+                                function addMarkersToMap(map) {
+                                  var newMarker = new H.map.Marker({lat:<%=campground.lat%>, lng:   <%=campground.lng%>});
+                                  map.addObject(newMarker);
+                                }
+
+                                function moveMapTo(map){
+                                  map.setCenter({lat:<%=campground.lat%>, lng:   <%=campground.lng%>});
+                                  map.setZoom(8);
+                                }
+
+                                // Initialize the platform object:
+                                var platform = new H.service.Platform({
+                                'app_id': 'process.env.APP_ID',
+                                'app_code': 'process.env.APP_CODE',
+                                useHTTPS: true
+                                });
+
+                                var pixelRatio = window.devicePixelRatio || 1;
+                                var defaultLayers = platform.createDefaultLayers({
+                                  tileSize: pixelRatio === 1 ? 256 : 512,
+                                  ppi: pixelRatio === 1 ? undefined : 320
+                                });
+
+                                // Instantiate (and display) a map object:
+                                var map = new H.Map(
+                                document.getElementById('map'),
+                                defaultLayers.normal.map,
+                                {pixelRatio: pixelRatio});
+
+                                var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+                                
+                                var ui = H.ui.UI.createDefault(map, defaultLayers);
+
+                                moveMapTo(map);
+                                addMarkersToMap(map);
+
+                  </script>
+
+<% include ../partials/footer %>
